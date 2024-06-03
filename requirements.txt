@@ -1,0 +1,13 @@
+openai
+langchain
+pandas
+numpy
+python-dotenv
+chainlit
+streamlit
+langchain_community
+langchain_pinecone
+langchain_core
+tiktoken
+st-star-rating
+pypdf
