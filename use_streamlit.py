@@ -68,26 +68,46 @@ async def page_1():
         st.chat_message("user").write(conversation['question'])
         st.chat_message("assisstant").write(conversation['answer'])
         st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
+        st.write(f"You rated this answer {conversation['star']} :star:")
     if "messages1" not in st.session_state:
         st.session_state["messages"] = [
             {"role": "system", "content": primer1}
         ]
-    if prompt := st.chat_input():
-        hasPrompt = True
-        st.chat_message("user").write(prompt)
+
+    if "stars1" not in st.session_state:
+        st.session_state.stars1 = ""
+
+    if st.session_state.stars1:
+        st.session_state.chat_history1.append(
+            {'question': st.session_state['question1'],
+             'answer': st.session_state['msg1'],
+             'star': st.session_state['stars1']
+             }
+        )
+        st.chat_message("user").write(st.session_state['question1'])
+        st.chat_message("assistant").write(st.session_state['msg1'])
+        st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
+        st.write(f"You rated this answer {st.session_state['stars1']} :star:")
+        del st.session_state.prompt1
+
+    if prompt1 := st.chat_input():
+        st.session_state.prompt1 = prompt1
+        st.chat_message("user").write(prompt1)
         response = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": primer1},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt1}
             ]
         )
         msg = response.choices[0].message.content
         st.chat_message("assistant").write(msg)
+        st.session_state.question1 = prompt1
+        st.session_state.msg1 = msg
         st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
-        st.session_state.chat_history1.append(
-            {'question': prompt, 'answer': msg}
-        )
+
+    if "prompt1" in st.session_state:
+        stars1 = st_star_rating("Please rate you experience", maxValue=5, defaultValue=3, key="stars1")
 
 async def page_2():
     st.title("🧑‍💻💬 A RAG chatbot for family and marriage legal questions")
@@ -98,7 +118,24 @@ async def page_2():
         st.chat_message("user").write(conversation['question'])
         st.chat_message("assisstant").write(conversation['answer'])
         st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
+        st.write(f"You rated this answer {conversation['star']}")
+    if "stars2" not in st.session_state:
+        st.session_state.stars2 = ""
+
+    if st.session_state.stars2:
+        st.session_state.chat_history2.append(
+            {'question': st.session_state['question'],
+             'answer': st.session_state['msg'],
+             'star': st.session_state['stars2']
+             }
+        )
+        st.chat_message("user").write(st.session_state['question'])
+        st.chat_message("assistant").write(st.session_state['msg'])
+        st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
+        st.write(f"You rated this answer {st.session_state['stars2']} :star:")
+        del st.session_state.prompt
     if prompt := st.chat_input():
+        st.session_state.prompt = prompt
         st.chat_message("user").write(prompt)
         context = ""
         if len(prompt) <= 150:
@@ -140,10 +177,11 @@ async def page_2():
             msg = remove_string(msg)
         st.chat_message("assistant").write(msg)
         st.write("Nếu cần tư vấn rõ hơn, bạn có thể liên hệ luật sư qua trang web [Luật minh khuê](https://luatminhkhue.vn/)")
-        st.session_state.chat_history2.append(
-            {'question': prompt, 'answer': msg}
-        )
+        st.session_state.question = prompt
+        st.session_state.msg = msg
 
+    if "prompt" in st.session_state:
+        stars2 = st_star_rating("Please rate you experience", maxValue=5, defaultValue=3, key="stars2")
 
 PAGES = {
     "GPT-3.5-Turbo": page_1,
