@@ -11,24 +11,19 @@ from langchain_community.embeddings.openai import OpenAIEmbeddings
 from openai import AsyncOpenAI
 import asyncio
 from streamlit_star_rating import st_star_rating
-import streamlit_authenticator as stauth
 import yaml
 import pandas as pd
 import matplotlib.pyplot as plt
-from yaml.loader import SafeLoader
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 index_name = 'llm-chatbot-gpt'
-embedding = OpenAIEmbeddings(openai_api_key = OPENAI_API_KEY)
-client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-pVS = PineconeVectorStore(
-    index_name=index_name,
-    embedding=embedding
-)
+embedding = None
+client = None
+pVS = None
+
 
 primer2 = f"""Bây giờ bạn hãy đóng vai trò là một luật sư xuất sắc về luật hôn nhân và gia đình ở Việt Nam.
 Tôi sẽ hỏi bạn các câu hỏi về tình huống thực tế liên quan tới luật hôn nhân và gia đình. Bạn hãy tóm tắt tình huống
@@ -119,6 +114,19 @@ async def qa2(prompt):
     return str(msg)
 
 async def page_1():
+    global embedding
+    global client
+    global pVS
+
+    embedding = OpenAIEmbeddings(openai_api_key = st.session_state.openai_apikey)
+
+    client = AsyncOpenAI(api_key= st.session_state.openai_apikey)
+
+    pVS = PineconeVectorStore(
+        index_name=index_name,
+        embedding=embedding
+    )
+
     st.title("🧑‍💻💬 A RAG chatbot for family and marriage legal questions")
     """
     Đây là chatbot giúp người dân tìm hiểu luật hôn nhân và gia đình. Bạn hãy hỏi những câu hỏi có liên quan tới luật này nhé.
@@ -203,27 +211,43 @@ async def page_2():
     # Hiển thị giá trị của từng cột trong histogram
     for i, count in enumerate(ax.patches):
         ax.annotate(str(int(count.get_height())),
-                xy=(count.get_x() + count.get_width() / 2, count.get_height()),
-                ha='center', va='bottom')
+                    xy=(count.get_x() + count.get_width() / 2, count.get_height()),
+                    ha='center', va='bottom')
 
     st.pyplot(fig)
 
 
+def page_3():
+    # Giao diện nhập API key
+    st.title("Nhập API Key")
+    api_key_input = st.text_input("API Key:", type="password")
+    st.session_state.openai_apikey = api_key_input
+    # Nút để lưu API key
+    if st.button("Lưu API Key"):
+        st.success("API Key đã được lưu!")
+
+
 PAGES = {
     "Chat": page_1,
-    "Statistic": page_2
+    "Statistic": page_2,
+    "Update API KEY": page_3
 }
 
 def main():
     st.set_page_config(page_title="RAG Chatbot")
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+    if "openai_apikey" not in st.session_state:
+        st.session_state.openai_apikey = os.getenv('OPENAI_API_KEY')
     # asyncio.run(question_answering())
 
     st.sidebar.title("Navigation")
     choice = st.sidebar.selectbox("Select an option", list(PAGES.keys()))
     # Call the page function
-    asyncio.run(PAGES[choice]())
+    if choice != "Update API KEY":
+        asyncio.run(PAGES[choice]())
+    else:
+        PAGES[choice]()
 
 if __name__ == "__main__":
     main()
