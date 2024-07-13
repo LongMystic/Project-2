@@ -12,3 +12,5 @@ Hệ thống đưa ra câu trả lời cho câu hỏi người dùng
 - Langchain
 - Pinecone
 - OpenAI API (text-embedding-ada-002, gpt-3.5-turbo)
+
+# Chi tiết về cách cài đặt: https://docs.google.com/document/d/1Suwspl0epO7h5DJaC8EJ0PNJRprQCVmKqxTr2YjwFfc/edit
